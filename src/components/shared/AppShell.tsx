@@ -7,7 +7,7 @@ import { NotificationBell } from './NotificationBell';
 import Image from 'next/image';
 import {
   LayoutDashboard, ListChecks, Users, Truck, Bell, BarChart2,
-  ChevronLeft, ChevronRight, LogOut, Menu,
+  ChevronLeft, ChevronRight, LogOut,
 } from 'lucide-react';
 
 interface NavItem { label: string; href: string; icon: React.ReactNode; }
@@ -22,10 +22,10 @@ const ADMIN_NAV: NavItem[] = [
 ];
 
 const MUMINEEN_NAV: NavItem[] = [
-  { label: 'Dashboard',       href: '/mumineen/dashboard',       icon: <LayoutDashboard size={18} /> },
-  { label: 'Requirements',    href: '/mumineen/requirements',    icon: <ListChecks size={18} /> },
-  { label: 'My Commitments',  href: '/mumineen/my-commitments',  icon: <ListChecks size={18} /> },
-  { label: 'Notifications',   href: '/mumineen/notifications',   icon: <Bell size={18} /> },
+  { label: 'Dashboard',      href: '/mumineen/dashboard',       icon: <LayoutDashboard size={18} /> },
+  { label: 'Requirements',   href: '/mumineen/requirements',    icon: <ListChecks size={18} /> },
+  { label: 'Commitments',    href: '/mumineen/my-commitments',  icon: <ListChecks size={18} /> },
+  { label: 'Notifications',  href: '/mumineen/notifications',   icon: <Bell size={18} /> },
 ];
 
 interface Props {
@@ -42,16 +42,15 @@ export function AppShell({ role, pageTitle, children }: Props) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--surface-page)]">
-      {/* Sidebar */}
-      <aside
-        className={`flex flex-col bg-[var(--surface-sidebar)] transition-all duration-300 ${collapsed ? 'w-16' : 'w-60'} flex-shrink-0 hidden md:flex`}
-      >
+
+      {/* ── Desktop Sidebar ─────────────────────────────────────── */}
+      <aside className={`hidden md:flex flex-col bg-[var(--surface-sidebar)] transition-all duration-300 flex-shrink-0 ${collapsed ? 'w-16' : 'w-60'}`}>
         {/* Logo */}
         <div className="flex items-center justify-between px-3 py-3 border-b border-white/10">
           {!collapsed && (
             <div className="flex flex-col gap-1 flex-1 min-w-0">
               <Image src="/logo.png" alt="FMB Logo" width={160} height={64} className="object-contain" style={{ maxHeight: 52 }} />
-              <p className="text-[var(--text-muted)] text-[10px] leading-tight pl-0.5">ROTI Management</p>
+              <p className="text-[10px] leading-tight pl-0.5" style={{ color: 'var(--text-muted)' }}>ROTI Management</p>
             </div>
           )}
           {collapsed && (
@@ -59,23 +58,21 @@ export function AppShell({ role, pageTitle, children }: Props) {
               F
             </div>
           )}
-          <button onClick={() => setCollapsed(!collapsed)} className="text-[var(--text-muted)] hover:text-[var(--brand-gold)] transition-colors ml-1 flex-shrink-0">
+          <button onClick={() => setCollapsed(!collapsed)} className="ml-1 flex-shrink-0 transition-colors" style={{ color: 'var(--text-muted)' }}>
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
         </div>
 
-        {/* Nav */}
+        {/* Nav links */}
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
           {nav.map((item) => {
             const active = pathname.startsWith(item.href);
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium
+              <Link key={item.href} href={item.href}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium border-l-2
                   ${active
-                    ? 'border-l-2 border-[var(--brand-gold)] text-[var(--brand-gold)] bg-white/5'
-                    : 'text-[var(--text-on-dark)] hover:text-[var(--brand-gold)] hover:bg-white/5 border-l-2 border-transparent'
+                    ? 'border-[var(--brand-gold)] text-[var(--brand-gold)] bg-white/5'
+                    : 'border-transparent text-[var(--text-on-dark)] hover:text-[var(--brand-gold)] hover:bg-white/5'
                   }`}
               >
                 {item.icon}
@@ -93,36 +90,64 @@ export function AppShell({ role, pageTitle, children }: Props) {
                 {user?.name?.[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[var(--text-on-dark)] text-xs font-semibold truncate">{user?.name}</p>
-                <p className="text-[var(--text-muted)] text-[10px] truncate">{user?.role}</p>
+                <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-on-dark)' }}>{user?.name}</p>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{user?.role}</p>
               </div>
-              <button onClick={logout} className="text-[var(--text-muted)] hover:text-red-400 transition-colors">
+              <button onClick={logout} className="transition-colors" style={{ color: 'var(--text-muted)' }}>
                 <LogOut size={14} />
               </button>
             </div>
           ) : (
-            <button onClick={logout} className="w-full flex justify-center text-[var(--text-muted)] hover:text-red-400 transition-colors">
+            <button onClick={logout} className="w-full flex justify-center transition-colors" style={{ color: 'var(--text-muted)' }}>
               <LogOut size={16} />
             </button>
           )}
         </div>
       </aside>
 
-      {/* Main */}
+      {/* ── Main content ────────────────────────────────────────── */}
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-[var(--surface-sidebar)] flex items-center justify-between px-6 flex-shrink-0">
-          <h1 className="text-[var(--text-on-dark)] font-display text-lg" style={{ fontFamily: 'Amiri, serif' }}>{pageTitle}</h1>
+        <header className="h-14 bg-[var(--surface-sidebar)] flex items-center justify-between px-4 md:px-6 flex-shrink-0">
+          {/* Mobile: logo */}
+          <div className="flex items-center gap-3">
+            <Image src="/logo.png" alt="FMB Logo" width={90} height={36} className="object-contain md:hidden" />
+            <h1 className="hidden md:block text-lg" style={{ fontFamily: 'Amiri, serif', color: 'var(--text-on-dark)' }}>
+              {pageTitle}
+            </h1>
+          </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
+            {/* Mobile logout */}
+            <button onClick={logout} className="md:hidden p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'var(--text-on-dark)' }}>
+              <LogOut size={18} />
+            </button>
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Page content — add bottom padding on mobile for bottom nav */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
           {children}
         </main>
       </div>
+
+      {/* ── Mobile Bottom Navigation ─────────────────────────────── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center border-t"
+        style={{ background: 'var(--surface-sidebar)', borderColor: 'rgba(255,255,255,0.08)' }}>
+        {nav.map((item) => {
+          const active = pathname.startsWith(item.href);
+          return (
+            <Link key={item.href} href={item.href}
+              className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-colors"
+              style={{ color: active ? 'var(--brand-gold)' : 'var(--text-muted)' }}
+            >
+              <span className={`${active ? 'scale-110' : ''} transition-transform`}>{item.icon}</span>
+              <span className="text-[10px] font-medium leading-tight">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
     </div>
   );
 }
