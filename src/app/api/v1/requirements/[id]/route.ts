@@ -28,6 +28,7 @@ export const GET = withAuth()(async (_req: AuthenticatedRequest, params) => {
     createdAt: commitments.createdAt,
     updatedAt: commitments.updatedAt,
     userName: users.name,
+    userItsNumber: users.itsNumber,
     userEmail: users.email,
   }).from(commitments)
     .leftJoin(users, eq(commitments.userId, users.id))

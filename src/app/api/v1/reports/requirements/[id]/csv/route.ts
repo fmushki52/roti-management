@@ -11,22 +11,27 @@ export const GET = withAuth('ADMIN')(async (_req: AuthenticatedRequest, params) 
   if (!req_row) return NextResponse.json(fail('Not found'), { status: 404 });
 
   const rows = await db.select({
-    name: users.name, email: users.email,
-    packets: commitments.packetsCommitted, status: commitments.status,
-    submittedAt: commitments.createdAt, rating: commitments.adminRating, feedback: commitments.adminFeedback,
+    itsNumber: users.itsNumber,
+    name: users.name,
+    email: users.email,
+    packets: commitments.packetsCommitted,
+    status: commitments.status,
+    submittedAt: commitments.createdAt,
+    rating: commitments.adminRating,
+    feedback: commitments.adminFeedback,
   }).from(commitments)
     .leftJoin(users, eq(commitments.userId, users.id))
     .where(eq(commitments.requirementId, id));
 
-  const header = 'Name,Email,Packets Committed,Status,Submitted At,Rating,Feedback\n';
+  const header = 'ITS Number,Name,Email,Packets Committed,Status,Submitted At,Rating,Feedback\n';
   const body = rows.map(r =>
-    `"${r.name || ''}","${r.email || ''}",${r.packets},"${r.status}","${r.submittedAt}",${r.rating || ''},"${r.feedback || ''}"`
+    `"${r.itsNumber || ''}","${r.name || ''}","${r.email || ''}",${r.packets},"${r.status}","${r.submittedAt}",${r.rating || ''},"${r.feedback || ''}"`
   ).join('\n');
 
   return new NextResponse(header + body, {
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="report-${id}.csv"`,
+      'Content-Disposition': `attachment; filename="report-${req_row.title.replace(/\s+/g, '-')}.csv"`,
     },
   });
 });
