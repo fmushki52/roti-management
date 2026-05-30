@@ -42,6 +42,16 @@ export const POST = withAuth('MUMINEEN')(async (req: AuthenticatedRequest) => {
   const [requirement] = await db.select().from(rotiRequirements).where(eq(rotiRequirements.id, parsed.data.requirementId)).limit(1);
   if (!requirement || requirement.status !== 'OPEN') return NextResponse.json(fail('Requirement not available'), { status: 400 });
 
+  // Issue #2: enforce min/max packets per commit
+  const min = requirement.minPacketsPerCommit ?? 1;
+  const max = requirement.maxPacketsPerCommit;
+  if (parsed.data.packetsCommitted < min) {
+    return NextResponse.json(fail(`Minimum ${min} packet(s) required`), { status: 400 });
+  }
+  if (max && parsed.data.packetsCommitted > max) {
+    return NextResponse.json(fail(`Maximum ${max} packet(s) allowed`), { status: 400 });
+  }
+
   if (!requirement.allowMultipleCommits) {
     const [existing] = await db.select().from(commitments)
       .where(and(eq(commitments.requirementId, parsed.data.requirementId), eq(commitments.userId, req.user.userId)))

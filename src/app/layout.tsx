@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from 'sonner';
 import { Providers } from './providers';
 import { OfflineBanner } from '@/components/shared/OfflineBanner';
+import { AuthInitializer } from '@/components/shared/AuthInitializer';
 
 export const metadata: Metadata = {
   title: 'ROTI Management — FMB Salmiya',
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body style={{ fontFamily: 'Nunito, sans-serif' }}>
         <Providers>
+          <AuthInitializer />
           <OfflineBanner />
           {children}
           <Toaster richColors position="top-right" />

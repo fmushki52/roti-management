@@ -43,6 +43,17 @@ export default function RequirementDetailPage({ params }: { params: Promise<{ id
     setSelected(new Set());
   }
 
+  async function updateRequirementStatus(status: 'CLOSED' | 'CANCELLED' | 'OPEN') {
+    const res = await apiFetch(`/api/v1/requirements/${id}`, {
+      method: 'PATCH', body: JSON.stringify({ status }),
+    });
+    if (res.success) {
+      toast.success(`Requirement ${status.toLowerCase()}`);
+      qc.invalidateQueries({ queryKey: ['requirement', id] });
+      qc.invalidateQueries({ queryKey: ['requirements'] });
+    } else toast.error(res.error || 'Failed');
+  }
+
   async function reject() {
     if (!rejectTarget || !rejectReason.trim()) return;
     const res = await apiFetch(`/api/v1/commitments/${rejectTarget}/reject`, {
@@ -64,12 +75,37 @@ export default function RequirementDetailPage({ params }: { params: Promise<{ id
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold" style={{ fontFamily: 'Amiri, serif', color: 'var(--brand-brown)', borderBottom: '1px solid var(--brand-gold-deep)', paddingBottom: '4px' }}>
-          {req.title}
-        </h2>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <h2 className="text-xl font-bold" style={{ fontFamily: 'Amiri, serif', color: 'var(--brand-brown)', borderBottom: '1px solid var(--brand-gold-deep)', paddingBottom: '4px' }}>
+            {req.title}
+          </h2>
+          {/* Issue #3: Close / Cancel / Re-open buttons */}
+          <div className="flex gap-2 flex-shrink-0">
+            {req.status === 'OPEN' && (
+              <>
+                <Button size="sm" variant="outline" onClick={() => updateRequirementStatus('CLOSED')}
+                  style={{ borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}>
+                  Close
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => updateRequirementStatus('CANCELLED')}
+                  className="border-red-300 text-red-600 hover:bg-red-50">
+                  Cancel
+                </Button>
+              </>
+            )}
+            {(req.status === 'CLOSED' || req.status === 'CANCELLED') && (
+              <Button size="sm" onClick={() => updateRequirementStatus('OPEN')}
+                style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}>
+                Re-open
+              </Button>
+            )}
+          </div>
+        </div>
         <div className="flex gap-4 mt-3 text-sm flex-wrap" style={{ color: 'var(--text-secondary)' }}>
           <span>Delivery: <strong>{format(new Date(req.deliveryDate), 'dd MMM yyyy')}</strong></span>
           <span>Required: <strong>{req.totalPacketsRequired}</strong></span>
+          {req.minPacketsPerCommit && <span>Min/commit: <strong>{req.minPacketsPerCommit}</strong></span>}
+          {req.maxPacketsPerCommit && <span>Max/commit: <strong>{req.maxPacketsPerCommit}</strong></span>}
           <span>Committed: <strong style={{ color: 'var(--brand-gold-deep)' }}>{req.totalCommitted || 0}</strong></span>
           <StatusBadge status={req.status} />
         </div>

@@ -17,7 +17,7 @@ export function RequirementForm() {
   const router = useRouter();
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(CreateRequirementSchema),
-    defaultValues: { allowMultipleCommits: false },
+    defaultValues: { allowMultipleCommits: false, minPacketsPerCommit: 1 },
   });
 
   async function onSubmit(data: FormData) {
@@ -43,9 +43,24 @@ export function RequirementForm() {
       </div>
       <div className="space-y-1">
         <Label>Total Packets Required *</Label>
-        <Input type="number" {...register('totalPacketsRequired', { valueAsNumber: true })} className="border-[var(--border-default)]" />
+        <Input type="number" min={1} {...register('totalPacketsRequired', { valueAsNumber: true })} className="border-[var(--border-default)]" />
         {errors.totalPacketsRequired && <p className="text-red-500 text-xs">{errors.totalPacketsRequired.message}</p>}
       </div>
+
+      {/* Issue #2: min/max packets per Mumineen */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>Min Packets per Mumineen</Label>
+          <Input type="number" min={1} {...register('minPacketsPerCommit', { valueAsNumber: true })} className="border-[var(--border-default)]" placeholder="1" />
+          {errors.minPacketsPerCommit && <p className="text-red-500 text-xs">{errors.minPacketsPerCommit.message}</p>}
+        </div>
+        <div className="space-y-1">
+          <Label>Max Packets per Mumineen <span className="text-[var(--text-muted)] font-normal">(optional)</span></Label>
+          <Input type="number" min={1} {...register('maxPacketsPerCommit', { valueAsNumber: true, setValueAs: v => v === '' || isNaN(v) ? undefined : Number(v) })} className="border-[var(--border-default)]" placeholder="No limit" />
+          {errors.maxPacketsPerCommit && <p className="text-red-500 text-xs">{errors.maxPacketsPerCommit.message}</p>}
+        </div>
+      </div>
+
       <div className="space-y-1">
         <Label>Delivery Date *</Label>
         <Input type="date" {...register('deliveryDate')} className="border-[var(--border-default)]" />

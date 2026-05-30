@@ -12,7 +12,8 @@ const CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   RECEIVED:  { label: 'Received',  bg: 'bg-purple-100',  text: 'text-purple-800' },
   OPEN:      { label: 'Open',      bg: 'bg-green-100',   text: 'text-green-800' },
   CLOSED:    { label: 'Closed',    bg: 'bg-gray-100',    text: 'text-gray-700' },
-  FULFILLED: { label: 'Fulfilled', bg: 'bg-teal-100',    text: 'text-teal-800' },
+  FULFILLED:  { label: 'Fulfilled',  bg: 'bg-teal-100',    text: 'text-teal-800' },
+  CANCELLED:  { label: 'Cancelled', bg: 'bg-red-100',     text: 'text-red-700' },
 };
 
 interface Props {

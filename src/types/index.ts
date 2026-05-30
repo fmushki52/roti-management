@@ -1,5 +1,5 @@
 export type Role = 'ADMIN' | 'MUMINEEN';
-export type RequirementStatus = 'OPEN' | 'CLOSED' | 'FULFILLED';
+export type RequirementStatus = 'OPEN' | 'CLOSED' | 'FULFILLED' | 'CANCELLED';
 export type CommitmentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PREPARING' | 'DONE' | 'DELIVERED' | 'RECEIVED';
 export type NotificationType = 'INFO' | 'SUCCESS' | 'WARNING' | 'ALERT';
 
@@ -21,6 +21,8 @@ export interface RotiRequirement {
   title: string;
   description?: string | null;
   totalPacketsRequired: number;
+  minPacketsPerCommit?: number | null;
+  maxPacketsPerCommit?: number | null;
   deliveryDate: string;
   allowMultipleCommits: boolean;
   status: RequirementStatus;

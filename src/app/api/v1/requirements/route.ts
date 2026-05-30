@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/client';
 import { rotiRequirements, commitments } from '../../../../../drizzle/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and, inArray } from 'drizzle-orm';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { CreateRequirementSchema } from '@/lib/validations/requirements';
 import { ok, fail } from '@/lib/api/response';
@@ -9,9 +9,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 export const GET = withAuth()(async (req: AuthenticatedRequest) => {
   const isAdmin = req.user.role === 'ADMIN';
+
+  // Mumineen only see OPEN requirements (issue #4: hide CLOSED/CANCELLED)
   const rows = isAdmin
-    ? await db.select().from(rotiRequirements).orderBy(desc(rotiRequirements.createdAt))
-    : await db.select().from(rotiRequirements).where(eq(rotiRequirements.status, 'OPEN')).orderBy(desc(rotiRequirements.createdAt));
+    ? await db.select().from(rotiRequirements).orderBy(desc(rotiRequirements.deliveryDate))
+    : await db.select().from(rotiRequirements)
+        .where(eq(rotiRequirements.status, 'OPEN'))
+        .orderBy(rotiRequirements.deliveryDate); // soonest first for mumineen (issue #5)
 
   const totals = await db.select({
     requirementId: commitments.requirementId,

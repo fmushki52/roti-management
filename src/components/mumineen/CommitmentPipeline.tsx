@@ -89,11 +89,7 @@ export function CommitmentPipeline({ commitment, onUpdateStatus, onResubmit }: P
             <p className="text-sm text-teal-700 font-medium">✓ Ready — please deliver on {commitment.requirementDeliveryDate}</p>
           )}
           {commitment.status === 'RECEIVED' && (
-            <div className="space-y-1">
-              <p className="text-sm text-purple-700 font-medium">✓ Received by admin</p>
-              {commitment.adminRating && <RatingStars rating={commitment.adminRating} />}
-              {commitment.adminFeedback && <p className="text-sm text-[var(--text-secondary)]">{commitment.adminFeedback}</p>}
-            </div>
+            <p className="text-sm text-purple-700 font-medium">✓ JazakAllah Khair — your ROTI was received.</p>
           )}
         </div>
       )}
