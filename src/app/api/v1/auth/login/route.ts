@@ -22,17 +22,17 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const parsed = LoginSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json(fail('Invalid input'), { status: 400 });
+    return NextResponse.json(fail(parsed.error.issues[0].message), { status: 400 });
   }
 
-  const { email, password } = parsed.data;
-  const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  const { itsNumber, password } = parsed.data;
+  const [user] = await db.select().from(users).where(eq(users.itsNumber, itsNumber)).limit(1);
 
   if (!user || !user.isActive) {
     const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + 15 * 60 * 1000 };
     entry.count++;
     loginAttempts.set(ip, entry);
-    return NextResponse.json(fail('Invalid email or password'), { status: 401 });
+    return NextResponse.json(fail('Invalid ITS Number or password'), { status: 401 });
   }
 
   const valid = await verifyPassword(password, user.passwordHash);
@@ -40,15 +40,15 @@ export async function POST(req: NextRequest) {
     const entry = loginAttempts.get(ip) || { count: 0, resetAt: now + 15 * 60 * 1000 };
     entry.count++;
     loginAttempts.set(ip, entry);
-    return NextResponse.json(fail('Invalid email or password'), { status: 401 });
+    return NextResponse.json(fail('Invalid ITS Number or password'), { status: 401 });
   }
 
   loginAttempts.delete(ip);
 
-  const accessToken = signAccessToken({ userId: user.id, role: user.role as 'ADMIN' | 'MUMINEEN', email: user.email });
+  const accessToken = signAccessToken({ userId: user.id, role: user.role as 'ADMIN' | 'MUMINEEN', itsNumber: user.itsNumber });
   const rawRefresh = signRefreshToken({ userId: user.id });
   const tokenHash = await bcrypt.hash(rawRefresh, 10);
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
   await db.insert(refreshTokens).values({ id: uuidv4(), userId: user.id, tokenHash, expiresAt });
   await db.update(users).set({ lastLoginAt: new Date().toISOString(), updatedAt: new Date().toISOString() }).where(eq(users.id, user.id));
@@ -56,8 +56,13 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json(ok({
     accessToken,
     user: {
-      id: user.id, name: user.name, email: user.email,
-      role: user.role, mustChangePassword: user.mustChangePassword, avatarUrl: user.avatarUrl,
+      id: user.id,
+      itsNumber: user.itsNumber,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      mustChangePassword: user.mustChangePassword,
+      avatarUrl: user.avatarUrl,
     },
   }));
 
@@ -65,7 +70,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 30 * 24 * 60 * 60, // 30 days
     path: '/',
   });
 

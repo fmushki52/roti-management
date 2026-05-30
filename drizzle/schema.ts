@@ -1,10 +1,11 @@
-import { pgTable, text, integer, boolean, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, boolean } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 export const users = pgTable('users', {
   id:                 text('id').primaryKey(),
+  itsNumber:          text('its_number').notNull().unique(),   // 8-digit ITS number — primary login ID
   name:               text('name').notNull(),
-  email:              text('email').notNull().unique(),
+  email:              text('email'),                           // optional contact email
   passwordHash:       text('password_hash').notNull(),
   role:               text('role').notNull().default('MUMINEEN').$type<'ADMIN' | 'MUMINEEN'>(),
   mustChangePassword: boolean('must_change_password').notNull().default(true),

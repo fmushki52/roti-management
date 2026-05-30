@@ -55,8 +55,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, var(--brand-cream) 0%, var(--surface-page) 100%)' }}>
-      <div className={`w-full max-w-md ${shake ? 'shake' : ''}`}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: 'linear-gradient(135deg, var(--brand-cream) 0%, var(--surface-page) 100%)' }}>
+      <div className={`w-full max-w-sm ${shake ? 'shake' : ''}`}>
+
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <Image src="/logo.png" alt="FMB Logo" width={240} height={96} className="object-contain mb-3" priority />
@@ -65,53 +67,50 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 border" style={{ borderColor: 'var(--border-default)', boxShadow: '0 4px 24px rgba(184,150,12,0.12)' }}>
-          <h2 className="text-xl font-semibold mb-6 text-center" style={{ color: 'var(--text-primary)', fontFamily: 'Amiri, serif' }}>
-            Sign In
-          </h2>
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-lg p-7 border"
+          style={{ borderColor: 'var(--border-default)', boxShadow: '0 4px 24px rgba(184,150,12,0.12)' }}>
+          <h2 className="text-xl font-semibold mb-6 text-center"
+            style={{ color: 'var(--text-primary)', fontFamily: 'Amiri, serif' }}>Sign In</h2>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            {/* ITS Number */}
             <div className="space-y-1.5">
-              <Label htmlFor="email" style={{ color: 'var(--text-secondary)' }}>Email Address</Label>
+              <Label style={{ color: 'var(--text-secondary)' }}>ITS Number</Label>
               <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                {...register('email')}
-                placeholder="your@email.com"
-                className="border-[var(--border-default)] focus:border-[var(--brand-gold-deep)] focus:ring-[var(--brand-gold-deep)]"
+                type="text"
+                inputMode="numeric"
+                maxLength={8}
+                autoComplete="username"
+                placeholder="8-digit ITS number"
+                {...register('itsNumber')}
+                className="border-[var(--border-default)] text-center tracking-widest text-lg font-mono"
               />
-              {errors.email && <p className="text-red-500 text-xs">{errors.email.message}</p>}
+              {errors.itsNumber && <p className="text-red-500 text-xs">{errors.itsNumber.message}</p>}
             </div>
 
+            {/* Password */}
             <div className="space-y-1.5">
-              <Label htmlFor="password" style={{ color: 'var(--text-secondary)' }}>Password</Label>
+              <Label style={{ color: 'var(--text-secondary)' }}>Password</Label>
               <div className="relative">
                 <Input
-                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
-                  {...register('password')}
                   placeholder="••••••••"
-                  className="border-[var(--border-default)] focus:border-[var(--brand-gold-deep)] pr-10"
+                  {...register('password')}
+                  className="border-[var(--border-default)] pr-10"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: 'var(--text-muted)' }}>
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.password && <p className="text-red-500 text-xs">{errors.password.message}</p>}
             </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full font-semibold py-2.5"
-              style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}
-            >
+            <Button type="submit" disabled={isSubmitting} className="w-full font-semibold py-2.5"
+              style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}>
               {isSubmitting ? 'Signing in…' : 'Sign In'}
             </Button>
           </form>

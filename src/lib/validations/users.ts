@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
 export const CreateUserSchema = z.object({
-  name:  z.string().min(2).max(80),
-  email: z.string().email(),
-  role:  z.enum(['ADMIN', 'MUMINEEN']).default('MUMINEEN'),
+  itsNumber: z.string().regex(/^\d{8}$/, 'ITS Number must be exactly 8 digits'),
+  name:      z.string().min(2).max(80),
+  email:     z.string().email().optional().or(z.literal('')),
+  role:      z.enum(['ADMIN', 'MUMINEEN']).default('MUMINEEN'),
 });
 
 export const UpdateUserSchema = z.object({
-  name: z.string().min(2).max(80).optional(),
+  name:  z.string().min(2).max(80).optional(),
+  email: z.string().email().optional().or(z.literal('')),
 });

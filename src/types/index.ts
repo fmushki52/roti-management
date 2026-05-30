@@ -5,8 +5,9 @@ export type NotificationType = 'INFO' | 'SUCCESS' | 'WARNING' | 'ALERT';
 
 export interface User {
   id: string;
+  itsNumber: string;
   name: string;
-  email: string;
+  email?: string | null;
   role: Role;
   mustChangePassword: boolean;
   avatarUrl?: string | null;

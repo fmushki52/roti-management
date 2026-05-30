@@ -64,8 +64,9 @@ export function DataTable<T extends Record<string, unknown>>({ columns, data, se
         )}
       </div>
 
-      <div className="rounded-xl border border-[var(--border-default)] overflow-hidden shadow-sm">
-        <table className="w-full text-sm">
+      {/* Issue #2: horizontally scrollable on mobile */}
+      <div className="rounded-xl border border-[var(--border-default)] overflow-x-auto shadow-sm">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="bg-[var(--brand-cream)] border-b border-[var(--border-default)]">
               {columns.map(col => (

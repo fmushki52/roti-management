@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const LoginSchema = z.object({
-  email:    z.string().email(),
-  password: z.string().min(1),
+  itsNumber: z.string().regex(/^\d{8}$/, 'ITS Number must be exactly 8 digits'),
+  password:  z.string().min(1, 'Password is required'),
 });
 
 export const ChangePasswordSchema = z.object({

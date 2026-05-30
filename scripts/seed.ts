@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { users, rotiRequirements, commitments, notifications } from '../drizzle/schema';
+import { users, rotiRequirements, commitments, notifications, refreshTokens } from '../drizzle/schema';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -17,6 +17,7 @@ async function seed() {
   await db.delete(notifications);
   await db.delete(commitments);
   await db.delete(rotiRequirements);
+  await db.delete(refreshTokens);
   await db.delete(users);
   console.log('  ✓ Cleared existing data');
 
@@ -28,12 +29,12 @@ async function seed() {
   const userHash  = await bcrypt.hash('Mumineen@1234', 12);
 
   await db.insert(users).values([
-    { id: adminId,    name: 'FMB Admin',        email: 'admin@fmb-salmiya.org',  passwordHash: adminHash, role: 'ADMIN',    mustChangePassword: false },
-    { id: userIds[0], name: 'Ibrahim Hussain',   email: 'user1@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
-    { id: userIds[1], name: 'Yusuf Bhaisaheb',   email: 'user2@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
-    { id: userIds[2], name: 'Fatema Bai',        email: 'user3@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
-    { id: userIds[3], name: 'Murtaza Bhai',      email: 'user4@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
-    { id: userIds[4], name: 'Sakina Bai',        email: 'user5@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
+    { id: adminId,    itsNumber: '10000001', name: 'FMB Admin',        email: 'admin@fmb-salmiya.org',  passwordHash: adminHash, role: 'ADMIN',    mustChangePassword: false },
+    { id: userIds[0], itsNumber: '20000001', name: 'Ibrahim Hussain',   email: 'user1@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
+    { id: userIds[1], itsNumber: '20000002', name: 'Yusuf Bhaisaheb',   email: 'user2@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
+    { id: userIds[2], itsNumber: '20000003', name: 'Fatema Bai',        email: 'user3@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
+    { id: userIds[3], itsNumber: '20000004', name: 'Murtaza Bhai',      email: 'user4@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
+    { id: userIds[4], itsNumber: '20000005', name: 'Sakina Bai',        email: 'user5@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
   ]);
   console.log('  ✓ Created 1 admin + 5 Mumineen users');
 
@@ -213,12 +214,12 @@ async function seed() {
 
   console.log('\n✅ Seed complete!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Admin:    admin@fmb-salmiya.org   / Admin@1234');
-  console.log('Mumineen: user1@fmb-salmiya.org   / Mumineen@1234');
-  console.log('          user2@fmb-salmiya.org   / Mumineen@1234');
-  console.log('          user3@fmb-salmiya.org   / Mumineen@1234');
-  console.log('          user4@fmb-salmiya.org   / Mumineen@1234');
-  console.log('          user5@fmb-salmiya.org   / Mumineen@1234');
+  console.log('Admin:    ITS 10000001 / Admin@1234');
+  console.log('Mumineen: ITS 20000001 / Mumineen@1234  (Ibrahim Hussain)');
+  console.log('          ITS 20000002 / Mumineen@1234  (Yusuf Bhaisaheb)');
+  console.log('          ITS 20000003 / Mumineen@1234  (Fatema Bai)');
+  console.log('          ITS 20000004 / Mumineen@1234  (Murtaza Bhai)');
+  console.log('          ITS 20000005 / Mumineen@1234  (Sakina Bai)');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   process.exit(0);
 }

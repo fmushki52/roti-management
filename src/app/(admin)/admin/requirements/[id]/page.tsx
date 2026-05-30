@@ -130,9 +130,9 @@ export default function RequirementDetailPage({ params }: { params: Promise<{ id
         </Button>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
-        <table className="w-full text-sm">
+      {/* Table — scrollable on mobile */}
+      <div className="bg-white rounded-xl border overflow-x-auto" style={{ borderColor: 'var(--border-default)' }}>
+        <table className="w-full text-sm min-w-[640px]">
           <thead>
             <tr className="bg-[var(--brand-cream)] border-b" style={{ borderColor: 'var(--border-default)' }}>
               <th className="px-4 py-3 text-left w-8">

@@ -34,7 +34,7 @@ export default function AdminDeliveriesPage() {
         <Input type="date" value={dateFilter} onChange={e => setDateFilter(e.target.value)} className="w-auto border-[var(--border-default)]" />
       </div>
 
-      <div className="bg-white rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)' }}>
+      <div className="bg-white rounded-xl border overflow-x-auto" style={{ borderColor: "var(--border-default)" }}>
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[var(--brand-cream)] border-b" style={{ borderColor: 'var(--border-default)' }}>
