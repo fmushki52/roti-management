@@ -66,7 +66,7 @@ export default function ChangePasswordPage() {
     <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, var(--brand-cream) 0%, var(--surface-page) 100%)' }}>
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <Image src="/logo.png" alt="FMB Logo" width={80} height={80} className="object-contain mb-3" />
+          <Image src="/logo.png" alt="FMB Logo" width={200} height={80} className="object-contain mb-3" />
           <h1 className="text-xl font-bold text-center" style={{ fontFamily: 'Amiri, serif', color: 'var(--brand-gold-deep)' }}>
             Welcome — Set Your Password
           </h1>

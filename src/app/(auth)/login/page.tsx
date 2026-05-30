@@ -59,12 +59,7 @@ export default function LoginPage() {
       <div className={`w-full max-w-md ${shake ? 'shake' : ''}`}>
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-24 h-24 relative mb-4">
-            <Image src="/logo.png" alt="FMB Logo" fill className="object-contain" priority />
-          </div>
-          <h1 className="text-2xl font-bold text-center" style={{ fontFamily: 'Amiri, serif', color: 'var(--brand-gold-deep)' }}>
-            Faiz al-Mawaid al-Burhaniyah
-          </h1>
+          <Image src="/logo.png" alt="FMB Logo" width={240} height={96} className="object-contain mb-3" priority />
           <p className="text-sm text-center mt-1" style={{ color: 'var(--text-muted)', fontFamily: 'Amiri, serif' }}>
             Badri Mohallah Salmiya — ROTI Management
           </p>

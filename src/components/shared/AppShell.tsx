@@ -47,18 +47,19 @@ export function AppShell({ role, pageTitle, children }: Props) {
         className={`flex flex-col bg-[var(--surface-sidebar)] transition-all duration-300 ${collapsed ? 'w-16' : 'w-60'} flex-shrink-0 hidden md:flex`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-3 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-3 py-3 border-b border-white/10">
           {!collapsed && (
-            <div className="flex items-center gap-2">
-              <Image src="/logo.png" alt="FMB Logo" width={36} height={36} className="rounded" />
-              <div>
-                <p className="text-[var(--text-on-dark)] text-xs font-bold leading-tight">FMB Salmiya</p>
-                <p className="text-[var(--text-muted)] text-[10px] leading-tight">ROTI Mgmt</p>
-              </div>
+            <div className="flex flex-col gap-1 flex-1 min-w-0">
+              <Image src="/logo.png" alt="FMB Logo" width={160} height={64} className="object-contain" style={{ maxHeight: 52 }} />
+              <p className="text-[var(--text-muted)] text-[10px] leading-tight pl-0.5">ROTI Management</p>
             </div>
           )}
-          {collapsed && <Image src="/logo.png" alt="FMB Logo" width={32} height={32} className="rounded mx-auto" />}
-          <button onClick={() => setCollapsed(!collapsed)} className="text-[var(--text-muted)] hover:text-[var(--brand-gold)] transition-colors ml-auto">
+          {collapsed && (
+            <div className="w-8 h-8 rounded-full bg-[var(--brand-gold)] flex items-center justify-center text-[var(--text-on-gold)] font-bold text-sm mx-auto">
+              F
+            </div>
+          )}
+          <button onClick={() => setCollapsed(!collapsed)} className="text-[var(--text-muted)] hover:text-[var(--brand-gold)] transition-colors ml-1 flex-shrink-0">
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
         </div>
