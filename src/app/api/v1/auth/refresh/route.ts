@@ -31,6 +31,6 @@ export async function POST(req: NextRequest) {
   const [user] = await db.select().from(users).where(eq(users.id, payload.userId)).limit(1);
   if (!user || !user.isActive) return NextResponse.json(fail('User not found'), { status: 401 });
 
-  const accessToken = signAccessToken({ userId: user.id, role: user.role as 'ADMIN' | 'MUMINEEN', itsNumber: user.itsNumber });
+  const accessToken = signAccessToken({ userId: user.id, role: user.role as 'ADMIN' | 'MUMINEEN' | 'DELIVERY_TEAM', itsNumber: user.itsNumber });
   return NextResponse.json(ok({ accessToken }));
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db/client';
 import { commitments, auditLogs } from '../../../../../../../drizzle/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { withAuth, AuthenticatedRequest } from '@/lib/auth/middleware';
 import { ok, fail } from '@/lib/api/response';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,10 +12,13 @@ const Schema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-// Only DELIVERY_TEAM (and ADMIN) can confirm delivery
+// ONLY DELIVERY_TEAM can confirm delivery — admin cannot
 export const PATCH = withAuth()(async (req: AuthenticatedRequest, params) => {
-  if (!['ADMIN', 'DELIVERY_TEAM'].includes(req.user.role)) {
-    return NextResponse.json(fail('Forbidden'), { status: 403 });
+  if (req.user.role !== 'DELIVERY_TEAM') {
+    return NextResponse.json(
+      fail('Only Delivery Team members can confirm delivery receipt'),
+      { status: 403 }
+    );
   }
 
   const { id } = params;

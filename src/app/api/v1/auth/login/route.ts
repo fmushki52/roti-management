@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   loginAttempts.delete(ip);
 
-  const accessToken = signAccessToken({ userId: user.id, role: user.role as 'ADMIN' | 'MUMINEEN', itsNumber: user.itsNumber });
+  const accessToken = signAccessToken({ userId: user.id, role: user.role as 'ADMIN' | 'MUMINEEN' | 'DELIVERY_TEAM', itsNumber: user.itsNumber });
   const rawRefresh = signRefreshToken({ userId: user.id });
   const tokenHash = await bcrypt.hash(rawRefresh, 10);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
