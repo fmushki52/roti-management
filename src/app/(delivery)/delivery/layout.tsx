@@ -15,7 +15,7 @@ export default function DeliveryLayout({ children }: { children: React.ReactNode
   useEffect(() => {
     if (!user) { router.replace('/login'); return; }
     if (user.mustChangePassword) { router.replace('/change-password'); return; }
-    if (!['ADMIN', 'DELIVERY_TEAM'].includes(user.role)) { router.replace('/mumineen/dashboard'); return; }
+    if (!['ADMIN', 'DELIVERY_TEAM'].includes(user.role)) { router.replace('/mumineen/dashboard'); return; } // Mumineen only
   }, [user, router]);
 
   if (!user || !['ADMIN', 'DELIVERY_TEAM'].includes(user.role)) return null;

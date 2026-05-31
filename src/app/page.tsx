@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
+import { roleHomePath } from '@/lib/auth/roleRedirect';
 
 export default function HomePage() {
   const { user } = useAuthStore();
@@ -12,12 +13,8 @@ export default function HomePage() {
       router.replace('/login');
     } else if (user.mustChangePassword) {
       router.replace('/change-password');
-    } else if (user.role === 'ADMIN') {
-      router.replace('/admin/dashboard');
-    } else if (user.role === 'DELIVERY_TEAM') {
-      router.replace('/delivery/deliveries');
     } else {
-      router.replace('/mumineen/dashboard');
+      router.replace(roleHomePath(user.role));
     }
   }, [user, router]);
 

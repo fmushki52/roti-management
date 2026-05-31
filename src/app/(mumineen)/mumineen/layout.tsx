@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/authStore';
 import { AppShell } from '@/components/shared/AppShell';
+import { roleHomePath } from '@/lib/auth/roleRedirect';
 
 const PAGE_TITLES: Record<string, string> = {
   '/mumineen/dashboard':      'My Dashboard',
@@ -19,7 +20,11 @@ export default function MumineenLayout({ children }: { children: React.ReactNode
   useEffect(() => {
     if (!user) { router.replace('/login'); return; }
     if (user.mustChangePassword) { router.replace('/change-password'); return; }
-    if (user.role !== 'MUMINEEN') { router.replace('/admin/dashboard'); return; }
+    // Send non-mumineen roles to their correct home — no redirect loops
+    if (user.role !== 'MUMINEEN') {
+      router.replace(roleHomePath(user.role));
+      return;
+    }
   }, [user, router]);
 
   if (!user || user.role !== 'MUMINEEN') return null;
