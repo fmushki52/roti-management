@@ -30,6 +30,7 @@ async function seed() {
 
   await db.insert(users).values([
     { id: adminId,    itsNumber: '10000001', name: 'FMB Admin',        email: 'admin@fmb-salmiya.org',  passwordHash: adminHash, role: 'ADMIN',    mustChangePassword: false },
+    { id: uuidv4(),   itsNumber: '30000001', name: 'Delivery Officer', email: 'delivery@fmb-salmiya.org', passwordHash: userHash, role: 'DELIVERY_TEAM', mustChangePassword: false },
     { id: userIds[0], itsNumber: '20000001', name: 'Ibrahim Hussain',   email: 'user1@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
     { id: userIds[1], itsNumber: '20000002', name: 'Yusuf Bhaisaheb',   email: 'user2@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
     { id: userIds[2], itsNumber: '20000003', name: 'Fatema Bai',        email: 'user3@fmb-salmiya.org', passwordHash: userHash,  role: 'MUMINEEN', mustChangePassword: false },
@@ -214,7 +215,8 @@ async function seed() {
 
   console.log('\n✅ Seed complete!');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('Admin:    ITS 10000001 / Admin@1234');
+  console.log('Admin:         ITS 10000001 / Admin@1234');
+  console.log('Delivery Team: ITS 30000001 / Mumineen@1234');
   console.log('Mumineen: ITS 20000001 / Mumineen@1234  (Ibrahim Hussain)');
   console.log('          ITS 20000002 / Mumineen@1234  (Yusuf Bhaisaheb)');
   console.log('          ITS 20000003 / Mumineen@1234  (Fatema Bai)');

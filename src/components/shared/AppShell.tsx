@@ -7,7 +7,7 @@ import { NotificationBell } from './NotificationBell';
 import Image from 'next/image';
 import {
   LayoutDashboard, ListChecks, Users, Truck, Bell, BarChart2,
-  ChevronLeft, ChevronRight, LogOut,
+  ChevronLeft, ChevronRight, LogOut, CheckSquare, CreditCard,
 } from 'lucide-react';
 
 interface NavItem { label: string; href: string; icon: React.ReactNode; mobileHidden?: boolean }
@@ -15,8 +15,10 @@ interface NavItem { label: string; href: string; icon: React.ReactNode; mobileHi
 const ADMIN_NAV: NavItem[] = [
   { label: 'Dashboard',     href: '/admin/dashboard',      icon: <LayoutDashboard size={18} /> },
   { label: 'Requirements',  href: '/admin/requirements',   icon: <ListChecks size={18} /> },
+  { label: 'Approvals',     href: '/admin/approvals',      icon: <CheckSquare size={18} /> },
   { label: 'Mumineen',      href: '/admin/users',          icon: <Users size={18} /> },
   { label: 'Deliveries',    href: '/admin/deliveries',     icon: <Truck size={18} /> },
+  { label: 'Payments',      href: '/admin/payments',       icon: <CreditCard size={18} />, mobileHidden: true },
   { label: 'Notifications', href: '/admin/notifications',  icon: <Bell size={18} />, mobileHidden: true },
   { label: 'Reports',       href: '/admin/reports',        icon: <BarChart2 size={18} />, mobileHidden: true },
 ];

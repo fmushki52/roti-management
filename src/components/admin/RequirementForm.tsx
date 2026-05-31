@@ -62,6 +62,17 @@ export function RequirementForm() {
       </div>
 
       <div className="space-y-1">
+        <Label>Amount per Packet (KD) <span className="text-[var(--text-muted)] font-normal text-xs">— admin only, not shown to Mumineen</span></Label>
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium" style={{ color: 'var(--text-muted)' }}>KD</span>
+          <Input type="number" step="0.001" min="0" placeholder="0.000"
+            {...register('amountPerPacket')}
+            className="border-[var(--border-default)] pl-10" />
+        </div>
+        {errors.amountPerPacket && <p className="text-red-500 text-xs">{String(errors.amountPerPacket.message)}</p>}
+      </div>
+
+      <div className="space-y-1">
         <Label>Delivery Date *</Label>
         <Input type="date" {...register('deliveryDate')} className="border-[var(--border-default)]" />
         {errors.deliveryDate && <p className="text-red-500 text-xs">{errors.deliveryDate.message}</p>}

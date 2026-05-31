@@ -66,18 +66,30 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* KPI Cards */}
+      {/* KPI Cards — clickable (#1) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: 'Open Requirements', value: openReqs.length, color: 'var(--brand-gold)' },
-          { label: 'Pending Approvals', value: pendingApprovals, color: 'var(--status-pending)' },
-          { label: 'Deliveries Today', value: todayDeliveries, color: 'var(--status-done)' },
-          { label: 'Total Mumineen', value: uniqueUsers, color: 'var(--status-approved)' },
+          { label: 'Open Requirements', value: openReqs.length,    color: 'var(--brand-gold)',       href: '/admin/requirements?status=OPEN' },
+          { label: 'Pending Approvals', value: pendingApprovals,   color: 'var(--status-pending)',   href: '/admin/approvals' },
+          { label: 'Deliveries Today',  value: todayDeliveries,    color: 'var(--status-done)',      href: '/admin/deliveries' },
+          { label: 'Total Mumineen',    value: uniqueUsers,         color: 'var(--status-approved)', href: null },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-white rounded-xl border p-5" style={{ borderColor: 'var(--border-default)', borderLeft: `4px solid ${kpi.color}` }}>
-            <p className="text-3xl font-bold" style={{ color: kpi.color, fontFamily: 'Amiri, serif' }}>{kpi.value}</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{kpi.label}</p>
-          </div>
+          kpi.href ? (
+            <Link key={kpi.label} href={kpi.href} className="block">
+              <div className="bg-white rounded-xl border p-5 hover:shadow-md transition-shadow cursor-pointer"
+                style={{ borderColor: 'var(--border-default)', borderLeft: `4px solid ${kpi.color}` }}>
+                <p className="text-3xl font-bold" style={{ color: kpi.color, fontFamily: 'Amiri, serif' }}>{kpi.value}</p>
+                <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{kpi.label}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Tap to view →</p>
+              </div>
+            </Link>
+          ) : (
+            <div key={kpi.label} className="bg-white rounded-xl border p-5"
+              style={{ borderColor: 'var(--border-default)', borderLeft: `4px solid ${kpi.color}` }}>
+              <p className="text-3xl font-bold" style={{ color: kpi.color, fontFamily: 'Amiri, serif' }}>{kpi.value}</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{kpi.label}</p>
+            </div>
+          )
         ))}
       </div>
 

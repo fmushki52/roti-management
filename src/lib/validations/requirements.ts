@@ -6,6 +6,7 @@ export const CreateRequirementSchema = z.object({
   totalPacketsRequired:   z.number().int().min(1).max(10000),
   minPacketsPerCommit:    z.number().int().min(1).default(1),
   maxPacketsPerCommit:    z.number().int().min(1).optional(),
+  amountPerPacket:        z.string().regex(/^\d+(\.\d{1,3})?$/, 'Invalid KD amount').optional(),
   deliveryDate:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   allowMultipleCommits:   z.boolean().default(false),
 }).refine(d => !d.maxPacketsPerCommit || d.maxPacketsPerCommit >= d.minPacketsPerCommit, {
@@ -19,7 +20,10 @@ export const UpdateRequirementSchema = z.object({
   totalPacketsRequired:   z.number().int().min(1).max(10000).optional(),
   minPacketsPerCommit:    z.number().int().min(1).optional(),
   maxPacketsPerCommit:    z.number().int().min(1).optional(),
+  amountPerPacket:        z.string().regex(/^\d+(\.\d{1,3})?$/).optional(),
   deliveryDate:           z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   allowMultipleCommits:   z.boolean().optional(),
   status:                 z.enum(['OPEN','CLOSED','FULFILLED','CANCELLED']).optional(),
+  closingRating:          z.number().int().min(1).max(5).optional(),
+  closingNotes:           z.string().max(500).optional(),
 });

@@ -172,6 +172,7 @@ export default function AdminUsersPage() {
               <select {...register('role')} className="w-full border border-[var(--border-default)] rounded-lg px-3 py-2 text-sm bg-white">
                 <option value="MUMINEEN">Mumineen</option>
                 <option value="ADMIN">Admin</option>
+                <option value="DELIVERY_TEAM">Delivery Team</option>
               </select>
             </div>
             <p className="text-xs p-3 bg-[var(--brand-cream)] rounded-lg" style={{ color: 'var(--text-muted)' }}>

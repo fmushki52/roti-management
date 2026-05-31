@@ -14,6 +14,8 @@ export default function HomePage() {
       router.replace('/change-password');
     } else if (user.role === 'ADMIN') {
       router.replace('/admin/dashboard');
+    } else if (user.role === 'DELIVERY_TEAM') {
+      router.replace('/delivery/deliveries');
     } else {
       router.replace('/mumineen/dashboard');
     }
