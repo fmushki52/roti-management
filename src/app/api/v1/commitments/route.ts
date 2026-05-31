@@ -28,6 +28,7 @@ export const GET = withAuth()(async (req: AuthenticatedRequest) => {
     userItsNumber: users.itsNumber,
     requirementTitle: rotiRequirements.title,
     requirementDeliveryDate: rotiRequirements.deliveryDate,
+    requirementAmountPerPacket: rotiRequirements.amountPerPacket,
     actualDeliveredQty: commitments.actualDeliveredQty,
     paymentExempt: commitments.paymentExempt,
     deliveryConfirmedBy: commitments.deliveryConfirmedBy,

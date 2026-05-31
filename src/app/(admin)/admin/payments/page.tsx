@@ -1,8 +1,8 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api/fetcher';
-import { Payment, Commitment, RotiRequirement, User } from '@/types';
+import { Payment, Commitment } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,10 +10,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { DataTable } from '@/components/shared/DataTable';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { Plus, Download, FileText } from 'lucide-react';
+import { Plus, Download, FileText, CheckCircle } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 
-type CommitmentRow = Commitment & { userName?: string; userItsNumber?: string; requirementTitle?: string; requirementDeliveryDate?: string };
+type CommitmentRow = Commitment & {
+  userName?: string;
+  userItsNumber?: string;
+  requirementTitle?: string;
+  requirementDeliveryDate?: string;
+  requirementAmountPerPacket?: string | null;
+};
 
 export default function AdminPaymentsPage() {
   const qc = useQueryClient();
@@ -21,23 +27,62 @@ export default function AdminPaymentsPage() {
   const [addModal, setAddModal] = useState<CommitmentRow | null>(null);
   const [reportFrom, setReportFrom] = useState('');
   const [reportTo, setReportTo] = useState('');
-  const [form, setForm] = useState({ amountOwed: '', amountPaid: '', paymentMethod: 'CASH', paymentDate: new Date().toISOString().split('T')[0], notes: '' });
+  const [form, setForm] = useState({
+    amountOwed: '',
+    amountPaid: '',
+    paymentMethod: 'CASH',
+    paymentDate: new Date().toISOString().split('T')[0],
+    notes: '',
+  });
 
-  const { data: paymentRes, isLoading } = useQuery({
+  const { data: paymentRes, isLoading: paymentsLoading } = useQuery({
     queryKey: ['payments'],
     queryFn: () => apiFetch<Payment[]>('/api/v1/payments'),
   });
 
-  const { data: commitRes } = useQuery({
+  const { data: commitRes, isLoading: commitsLoading } = useQuery({
     queryKey: ['all-commitments'],
     queryFn: () => apiFetch<CommitmentRow[]>('/api/v1/commitments'),
   });
 
   const payments = (paymentRes?.data || []) as (Payment & Record<string, unknown>)[];
-  const received = (commitRes?.data || []).filter(c => c.status === 'RECEIVED' && !c.paymentExempt) as CommitmentRow[];
+
+  // Set of commitmentIds that already have a payment recorded — fix #1
+  const paidCommitmentIds = useMemo(
+    () => new Set(payments.map(p => p.commitmentId)),
+    [payments]
+  );
+
+  // Received, non-exempt, NOT yet paid — fix #1
+  const awaitingPayment = useMemo(
+    () => (commitRes?.data || []).filter(
+      c => c.status === 'RECEIVED' && !c.paymentExempt && !paidCommitmentIds.has(c.id)
+    ) as CommitmentRow[],
+    [commitRes?.data, paidCommitmentIds]
+  );
+
+  // Auto-calculate amount from amountPerPacket × delivered qty — fix #3
+  function calcAmount(c: CommitmentRow): string {
+    const rate = parseFloat((c as any).requirementAmountPerPacket || '0');
+    const qty = c.actualDeliveredQty ?? c.packetsCommitted;
+    if (rate > 0 && qty > 0) return (rate * qty).toFixed(3);
+    return '';
+  }
+
+  function openPaymentModal(c: CommitmentRow) {
+    const auto = calcAmount(c);
+    setForm({
+      amountOwed: auto,
+      amountPaid: auto, // pre-fill paid = owed as default
+      paymentMethod: 'CASH',
+      paymentDate: new Date().toISOString().split('T')[0],
+      notes: '',
+    });
+    setAddModal(c);
+  }
 
   async function recordPayment() {
-    if (!addModal) return;
+    if (!addModal || !form.amountPaid) return;
     const res = await apiFetch('/api/v1/payments', {
       method: 'POST',
       body: JSON.stringify({
@@ -52,8 +97,8 @@ export default function AdminPaymentsPage() {
     if (res.success) {
       toast.success('Payment recorded');
       qc.invalidateQueries({ queryKey: ['payments'] });
+      qc.invalidateQueries({ queryKey: ['all-commitments'] });
       setAddModal(null);
-      setForm({ amountOwed: '', amountPaid: '', paymentMethod: 'CASH', paymentDate: new Date().toISOString().split('T')[0], notes: '' });
     } else toast.error(res.error || 'Failed');
   }
 
@@ -66,49 +111,57 @@ export default function AdminPaymentsPage() {
       if (!res.ok) { toast.error('Export failed'); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `payments-${reportFrom}-to-${reportTo}.csv`; a.click();
+      const a = document.createElement('a');
+      a.href = url; a.download = `payments-${reportFrom}-to-${reportTo}.csv`; a.click();
       URL.revokeObjectURL(url);
     } else {
-      // PDF
       const res = await apiFetch<Payment[]>(`/api/v1/reports/payments?from=${reportFrom}&to=${reportTo}`);
       if (!res.success || !res.data) { toast.error('Failed to load data'); return; }
       const jsPDF = (await import('jspdf')).default;
       const autoTable = (await import('jspdf-autotable')).default;
       const doc = new jsPDF({ orientation: 'landscape' });
-      doc.setFontSize(14); doc.setTextColor(74,51,0);
+      doc.setFontSize(14); doc.setTextColor(74, 51, 0);
       doc.text('FMB Salmiya — Payment Report', 14, 16);
-      doc.setFontSize(10); doc.setTextColor(92,74,26);
+      doc.setFontSize(10); doc.setTextColor(92, 74, 26);
       doc.text(`Period: ${reportFrom} to ${reportTo}   |   Generated: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 24);
-
       const rows = res.data.map(r => {
         const owed = parseFloat(r.amountOwed || '0');
         const paid = parseFloat(r.amountPaid || '0');
-        return [r.userItsNumber || '', r.userName || '', r.requirementTitle || '', r.committedQty || 0, r.deliveredQty ?? '—', owed.toFixed(3), paid.toFixed(3), (owed - paid).toFixed(3), r.paymentMethod || '', r.paymentDate || ''];
+        return [r.userItsNumber || '', r.userName || '', r.requirementTitle || '',
+          r.committedQty || 0, r.deliveredQty ?? '—',
+          owed.toFixed(3), paid.toFixed(3), (owed - paid).toFixed(3),
+          r.paymentMethod || '', r.paymentDate || ''];
       });
-
       autoTable(doc, {
         startY: 30,
         head: [['ITS', 'Name', 'Requirement', 'Committed', 'Delivered', 'Owed (KD)', 'Paid (KD)', 'Balance (KD)', 'Method', 'Date']],
         body: rows,
-        headStyles: { fillColor: [184,150,12], textColor: [44,31,0], fontStyle: 'bold', fontSize: 8 },
+        headStyles: { fillColor: [184, 150, 12], textColor: [44, 31, 0], fontStyle: 'bold', fontSize: 8 },
         bodyStyles: { fontSize: 8 },
-        alternateRowStyles: { fillColor: [255,253,240] },
+        alternateRowStyles: { fillColor: [255, 253, 240] },
       });
       doc.save(`payments-${reportFrom}-to-${reportTo}.pdf`);
     }
   }
 
-  const columns = [
+  // Payment history columns
+  const paymentColumns = [
     { key: 'userItsNumber', header: 'ITS', cell: (r: Payment) => <span className="font-mono text-xs">{r.userItsNumber}</span> },
     { key: 'userName', header: 'Name', cell: (r: Payment) => <span className="font-medium">{r.userName}</span> },
     { key: 'requirementTitle', header: 'Requirement', cell: (r: Payment) => <span className="text-xs">{r.requirementTitle}</span> },
     { key: 'deliveredQty', header: 'Delivered', cell: (r: Payment) => r.deliveredQty ?? '—' },
     { key: 'amountOwed', header: 'Owed (KD)', cell: (r: Payment) => r.amountOwed ? parseFloat(r.amountOwed).toFixed(3) : '—' },
-    { key: 'amountPaid', header: 'Paid (KD)', cell: (r: Payment) => <span className="text-green-700 font-semibold">{parseFloat(r.amountPaid).toFixed(3)}</span> },
-    { key: 'balance', header: 'Balance', cell: (r: Payment) => {
-      const b = parseFloat(r.amountOwed || '0') - parseFloat(r.amountPaid || '0');
-      return <span className={b > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>{b.toFixed(3)}</span>;
-    }},
+    {
+      key: 'amountPaid', header: 'Paid (KD)',
+      cell: (r: Payment) => <span className="text-green-700 font-semibold">{parseFloat(r.amountPaid).toFixed(3)}</span>
+    },
+    {
+      key: 'balance', header: 'Balance',
+      cell: (r: Payment) => {
+        const b = parseFloat(r.amountOwed || '0') - parseFloat(r.amountPaid || '0');
+        return <span className={b > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>{b.toFixed(3)}</span>;
+      }
+    },
     { key: 'paymentMethod', header: 'Method', cell: (r: Payment) => <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">{r.paymentMethod}</span> },
     { key: 'paymentDate', header: 'Date', cell: (r: Payment) => r.paymentDate },
   ];
@@ -119,41 +172,84 @@ export default function AdminPaymentsPage() {
         Payment Tracking
       </h2>
 
-      {/* Commitments awaiting payment */}
-      {received.length > 0 && (
-        <div className="space-y-3">
+      {/* ── Awaiting Payment — tabular (fix #2) ─────────────────── */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
           <h3 className="font-semibold text-sm" style={{ color: 'var(--text-secondary)' }}>
-            Received — Awaiting Payment ({received.length})
+            Received — Awaiting Payment ({awaitingPayment.length})
           </h3>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {received.map(c => (
-              <div key={c.id} className="bg-white border rounded-xl p-4" style={{ borderColor: 'var(--border-default)', borderLeft: '4px solid var(--brand-gold)' }}>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-sm">{c.userName}</p>
-                    <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{c.userItsNumber}</p>
-                    <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{(c as any).requirementTitle}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                      Committed: {c.packetsCommitted} · Delivered: {c.actualDeliveredQty ?? '?'}
-                    </p>
-                  </div>
-                  <Button size="sm" onClick={() => setAddModal(c)} className="text-xs h-7" style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}>
-                    <Plus size={11} className="mr-1" /> Pay
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-      )}
 
-      {/* Payment history */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-sm" style={{ color: 'var(--text-secondary)' }}>Payment History</h3>
-        <DataTable columns={columns as any} data={payments} searchKey="userName" loading={isLoading} />
+        {commitsLoading ? (
+          <div className="h-24 bg-[var(--brand-gold-light)] animate-pulse rounded-xl" />
+        ) : awaitingPayment.length === 0 ? (
+          <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">
+            <CheckCircle size={16} /> All received commitments have been paid.
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border overflow-x-auto" style={{ borderColor: 'var(--border-default)' }}>
+            <table className="w-full text-sm min-w-[700px]">
+              <thead>
+                <tr className="bg-[var(--brand-cream)] border-b" style={{ borderColor: 'var(--border-default)' }}>
+                  <th className="px-4 py-3 text-left font-semibold" style={{ color: 'var(--text-secondary)' }}>ITS / Name</th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{ color: 'var(--text-secondary)' }}>Requirement</th>
+                  <th className="px-4 py-3 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>Committed</th>
+                  <th className="px-4 py-3 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>Delivered</th>
+                  <th className="px-4 py-3 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>Rate (KD)</th>
+                  <th className="px-4 py-3 text-center font-semibold" style={{ color: 'var(--text-secondary)' }}>Amount Owed</th>
+                  <th className="px-4 py-3 text-left font-semibold" style={{ color: 'var(--text-secondary)' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {awaitingPayment.map(c => {
+                  const rate = parseFloat((c as any).requirementAmountPerPacket || '0');
+                  const qty = c.actualDeliveredQty ?? c.packetsCommitted;
+                  const owed = calcAmount(c);
+                  return (
+                    <tr key={c.id} className="border-b hover:bg-[var(--brand-cream)] transition-colors" style={{ borderColor: 'var(--border-default)' }}>
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{c.userName}</p>
+                        <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{c.userItsNumber}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{(c as any).requirementTitle}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{(c as any).requirementDeliveryDate}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center font-semibold">{c.packetsCommitted}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`font-semibold ${c.actualDeliveredQty != null && c.actualDeliveredQty < c.packetsCommitted ? 'text-amber-600' : 'text-green-600'}`}>
+                          {qty}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        {rate > 0 ? rate.toFixed(3) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-center font-bold" style={{ color: 'var(--brand-gold-deep)' }}>
+                        {owed ? `KD ${owed}` : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button size="sm" onClick={() => openPaymentModal(c)}
+                          className="text-xs h-7 font-semibold"
+                          style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}>
+                          <Plus size={11} className="mr-1" /> Record Payment
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Date range report */}
+      {/* ── Payment History ──────────────────────────────────────── */}
+      <div className="space-y-3">
+        <h3 className="font-semibold text-sm" style={{ color: 'var(--text-secondary)' }}>Payment History</h3>
+        <DataTable columns={paymentColumns as any} data={payments} searchKey="userName" loading={paymentsLoading} emptyMessage="No payments recorded yet." />
+      </div>
+
+      {/* ── Date Range Report ────────────────────────────────────── */}
       <div className="bg-white rounded-xl border p-5 space-y-4" style={{ borderColor: 'var(--border-default)' }}>
         <h3 className="font-semibold" style={{ fontFamily: 'Amiri, serif', color: 'var(--brand-brown)' }}>Date Range Report</h3>
         <div className="flex flex-wrap gap-3 items-end">
@@ -174,7 +270,7 @@ export default function AdminPaymentsPage() {
         </div>
       </div>
 
-      {/* Record payment modal */}
+      {/* ── Record Payment Modal ─────────────────────────────────── */}
       <Dialog open={!!addModal} onOpenChange={() => setAddModal(null)}>
         <DialogContent className="bg-white">
           <DialogHeader>
@@ -182,25 +278,53 @@ export default function AdminPaymentsPage() {
           </DialogHeader>
           {addModal && (
             <div className="space-y-4 mt-2">
-              <div className="p-3 bg-[var(--brand-cream)] rounded-lg text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <strong>{addModal.userName}</strong> ({addModal.userItsNumber})<br />
-                {(addModal as any).requirementTitle} · Delivered: {addModal.actualDeliveredQty ?? addModal.packetsCommitted} pkts
+              {/* Summary */}
+              <div className="p-3 bg-[var(--brand-cream)] rounded-lg text-sm space-y-1" style={{ color: 'var(--text-secondary)' }}>
+                <p><strong>{addModal.userName}</strong> <span className="font-mono text-xs">({addModal.userItsNumber})</span></p>
+                <p>{(addModal as any).requirementTitle}</p>
+                <p>
+                  Committed: <strong>{addModal.packetsCommitted}</strong> ·
+                  Delivered: <strong>{addModal.actualDeliveredQty ?? addModal.packetsCommitted}</strong>
+                  {(addModal as any).requirementAmountPerPacket && (
+                    <> · Rate: <strong>KD {parseFloat((addModal as any).requirementAmountPerPacket).toFixed(3)}/pkt</strong></>
+                  )}
+                </p>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Amount Owed (KD)</Label>
-                  <Input type="number" step="0.001" placeholder="0.000" value={form.amountOwed} onChange={e => setForm(f => ({ ...f, amountOwed: e.target.value }))} className="border-[var(--border-default)]" />
+                  <Input
+                    type="number" step="0.001" placeholder="0.000"
+                    value={form.amountOwed}
+                    onChange={e => setForm(f => ({ ...f, amountOwed: e.target.value }))}
+                    className="border-[var(--border-default)]"
+                  />
+                  {(addModal as any).requirementAmountPerPacket && (
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      Auto: KD {calcAmount(addModal)}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Amount Paid (KD) *</Label>
-                  <Input type="number" step="0.001" placeholder="0.000" value={form.amountPaid} onChange={e => setForm(f => ({ ...f, amountPaid: e.target.value }))} className="border-[var(--border-default)]" />
+                  <Input
+                    type="number" step="0.001" placeholder="0.000"
+                    value={form.amountPaid}
+                    onChange={e => setForm(f => ({ ...f, amountPaid: e.target.value }))}
+                    className="border-[var(--border-default)]"
+                  />
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-xs">Payment Method *</Label>
-                  <select value={form.paymentMethod} onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value }))}
-                    className="w-full border border-[var(--border-default)] rounded-lg px-3 py-2 text-sm bg-white">
+                  <select
+                    value={form.paymentMethod}
+                    onChange={e => setForm(f => ({ ...f, paymentMethod: e.target.value }))}
+                    className="w-full border border-[var(--border-default)] rounded-lg px-3 py-2 text-sm bg-white"
+                  >
                     <option value="CASH">Cash</option>
                     <option value="BANK_TRANSFER">Bank Transfer</option>
                     <option value="CHEQUE">Cheque</option>
@@ -209,16 +333,31 @@ export default function AdminPaymentsPage() {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs">Payment Date *</Label>
-                  <Input type="date" value={form.paymentDate} onChange={e => setForm(f => ({ ...f, paymentDate: e.target.value }))} className="border-[var(--border-default)]" />
+                  <Input
+                    type="date" value={form.paymentDate}
+                    onChange={e => setForm(f => ({ ...f, paymentDate: e.target.value }))}
+                    className="border-[var(--border-default)]"
+                  />
                 </div>
               </div>
+
               <div className="space-y-1">
                 <Label className="text-xs">Notes (optional)</Label>
-                <Input value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className="border-[var(--border-default)]" />
+                <Input
+                  value={form.notes}
+                  onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                  className="border-[var(--border-default)]"
+                  placeholder="Reference number, remarks…"
+                />
               </div>
+
               <div className="flex gap-2 justify-end">
                 <Button variant="ghost" onClick={() => setAddModal(null)}>Cancel</Button>
-                <Button onClick={recordPayment} disabled={!form.amountPaid} style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}>
+                <Button
+                  onClick={recordPayment}
+                  disabled={!form.amountPaid}
+                  style={{ background: 'var(--brand-gold)', color: 'var(--text-on-gold)' }}
+                >
                   Record Payment
                 </Button>
               </div>
