@@ -8,6 +8,8 @@ import { ok, fail } from '@/lib/api/response';
 import { v4 as uuidv4 } from 'uuid';
 
 export const GET = withAuth()(async (req: AuthenticatedRequest) => {
+  // ADMIN and DELIVERY_TEAM see all commitments; MUMINEEN sees only their own
+  const seeAll = req.user.role === 'ADMIN' || req.user.role === 'DELIVERY_TEAM';
   const isAdmin = req.user.role === 'ADMIN';
   const rows = await db.select({
     id: commitments.id,
@@ -23,12 +25,17 @@ export const GET = withAuth()(async (req: AuthenticatedRequest) => {
     createdAt: commitments.createdAt,
     updatedAt: commitments.updatedAt,
     userName: users.name,
+    userItsNumber: users.itsNumber,
     requirementTitle: rotiRequirements.title,
     requirementDeliveryDate: rotiRequirements.deliveryDate,
+    actualDeliveredQty: commitments.actualDeliveredQty,
+    paymentExempt: commitments.paymentExempt,
+    deliveryConfirmedBy: commitments.deliveryConfirmedBy,
+    deliveryConfirmedAt: commitments.deliveryConfirmedAt,
   }).from(commitments)
     .leftJoin(users, eq(commitments.userId, users.id))
     .leftJoin(rotiRequirements, eq(commitments.requirementId, rotiRequirements.id))
-    .where(isAdmin ? undefined : eq(commitments.userId, req.user.userId))
+    .where(seeAll ? undefined : eq(commitments.userId, req.user.userId))
     .orderBy(desc(commitments.createdAt));
 
   return NextResponse.json(ok(rows));
