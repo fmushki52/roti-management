@@ -7,7 +7,7 @@ import { NotificationBell } from './NotificationBell';
 import Image from 'next/image';
 import {
   LayoutDashboard, ListChecks, Users, Truck, Bell, BarChart2,
-  ChevronLeft, ChevronRight, LogOut, CheckSquare, CreditCard,
+  ChevronLeft, ChevronRight, LogOut, CheckSquare, CreditCard, MoreHorizontal, X,
 } from 'lucide-react';
 
 interface NavItem { label: string; href: string; icon: React.ReactNode; mobileHidden?: boolean }
@@ -39,10 +39,12 @@ interface Props {
 
 export function AppShell({ role, pageTitle, children }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const nav = role === 'ADMIN' ? ADMIN_NAV : MUMINEEN_NAV;
   const mobileNav = nav.filter(n => !n.mobileHidden);
+  const moreItems = nav.filter(n => n.mobileHidden);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--surface-page)]">
@@ -130,6 +132,46 @@ export function AppShell({ role, pageTitle, children }: Props) {
         </main>
       </div>
 
+      {/* ── More drawer (mobile, admin overflow items) ──────────── */}
+      {moreItems.length > 0 && moreOpen && (
+        <div className="md:hidden fixed inset-0 z-[10000]" onClick={() => setMoreOpen(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div
+            className="absolute bottom-0 left-0 right-0 rounded-t-2xl border-t"
+            style={{ background: 'var(--surface-sidebar)', borderColor: 'rgba(255,255,255,0.15)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-on-dark)' }}>More</span>
+              <button onClick={() => setMoreOpen(false)} style={{ color: 'var(--text-muted)' }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-3 pb-6" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
+              {moreItems.map((item) => {
+                const active = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMoreOpen(false)}
+                    className="flex items-center gap-4 px-4 py-3.5 rounded-xl mb-1 touch-manipulation"
+                    style={{
+                      color: active ? 'var(--brand-gold)' : 'var(--text-on-dark)',
+                      background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    <span style={{ color: active ? 'var(--brand-gold)' : 'var(--text-muted)' }}>{item.icon}</span>
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Mobile Bottom Navigation ─────────────────────────────── */}
       {/* Fixed above all content, pointer-events always active */}
       <nav
@@ -161,6 +203,27 @@ export function AppShell({ role, pageTitle, children }: Props) {
             </Link>
           );
         })}
+
+        {/* More button — only shown when there are overflow items */}
+        {moreItems.length > 0 && (
+          <button
+            onClick={() => setMoreOpen(true)}
+            className="flex-1 flex flex-col items-center justify-center py-3 gap-0.5 touch-manipulation"
+            style={{
+              color: moreItems.some(i => pathname.startsWith(i.href)) ? 'var(--brand-gold)' : 'var(--text-muted)',
+              minHeight: 56,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <span style={{
+              transform: moreItems.some(i => pathname.startsWith(i.href)) ? 'scale(1.15)' : 'scale(1)',
+              transition: 'transform 0.15s',
+            }}>
+              <MoreHorizontal size={18} />
+            </span>
+            <span className="text-[10px] font-medium leading-tight">More</span>
+          </button>
+        )}
       </nav>
 
     </div>

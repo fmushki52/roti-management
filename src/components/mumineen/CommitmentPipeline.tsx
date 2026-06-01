@@ -1,9 +1,10 @@
 'use client';
 import { CommitmentStatus } from '@/types';
 import { Button } from '@/components/ui/button';
+import { RatingStars } from '@/components/shared/RatingStars';
 import {
   Clock, ThumbsUp, ChefHat, PackageCheck, Truck, Star, XCircle,
-  ChevronRight,
+  ChevronRight, MessageSquare,
 } from 'lucide-react';
 
 /* ── Status config ───────────────────────────────────────────────── */
@@ -90,6 +91,8 @@ interface CommitmentData {
   requirementTitle?: string;
   requirementDeliveryDate?: string;
   rejectionReason?: string | null;
+  adminRating?: number | null;
+  adminFeedback?: string | null;
 }
 
 interface Props {
@@ -169,6 +172,26 @@ export function CommitmentPipeline({ commitment, onUpdateStatus, onResubmit }: P
             </div>
           </div>
         </div>
+
+        {/* Admin feedback — visible whenever rating or comment is present */}
+        {(commitment.adminRating || commitment.adminFeedback) && (
+          <div className="mt-3 rounded-xl border border-[var(--brand-gold-deep)]/30 bg-[var(--brand-gold-light)] px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare size={14} style={{ color: 'var(--brand-brown)' }} />
+              <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--brand-brown)' }}>
+                Admin Feedback
+              </span>
+            </div>
+            {commitment.adminRating != null && (
+              <RatingStars rating={commitment.adminRating} size={16} />
+            )}
+            {commitment.adminFeedback && (
+              <p className="text-sm mt-1.5 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                {commitment.adminFeedback}
+              </p>
+            )}
+          </div>
+        )}
 
         {/* ── Action buttons ──────────────────────────────────── */}
         <div className="mt-4">

@@ -57,6 +57,8 @@ export default function MyCommitmentsPage() {
                 ...c,
                 requirementTitle: (c as any).requirementTitle,
                 requirementDeliveryDate: (c as any).requirementDeliveryDate,
+                adminRating: c.adminRating,
+                adminFeedback: c.adminFeedback,
               }}
               onUpdateStatus={updateStatus}
               onResubmit={resubmit}
